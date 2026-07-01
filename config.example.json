@@ -1,0 +1,29 @@
+{
+  "pins": {
+    "raspberry": 17,
+    "network": 27,
+    "raspberry_connect": 22,
+    "knx": 23
+  },
+  "active_high": true,
+  "check_interval_seconds": 5,
+  "blink_interval_seconds": 0.5,
+  "local_probe_host": "",
+  "internet_probe_host": "1.1.1.1",
+  "internet_probe_port": 53,
+  "internet_timeout_seconds": 1.5,
+  "dns_probe_name": "raspberrypi.com",
+  "raspberry_connect_command": ["rpi-connect", "status"],
+  "raspberry_connect_timeout_seconds": 3,
+  "raspberry_connect_forbidden_words": [
+    "not signed in",
+    "signed out",
+    "not running",
+    "not installed",
+    "not connected"
+  ],
+  "knx_check_mode": "off",
+  "knx_host": "",
+  "knx_port": 3671,
+  "knx_timeout_seconds": 2
+}
