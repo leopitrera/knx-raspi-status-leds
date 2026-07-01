@@ -36,6 +36,8 @@ Recomendacion inicial: resistencia de `470 ohm` o `680 ohm` por LED.
 
 No uses los pines de 5 V para estos LED. Los GPIO de Raspberry trabajan a 3,3 V.
 
+Consulta la guia completa de cableado, resistencias y prueba manual en [HARDWARE.md](HARDWARE.md).
+
 ## Instalacion Rapida
 
 En la Raspberry:
