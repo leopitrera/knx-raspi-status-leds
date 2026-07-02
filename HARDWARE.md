@@ -186,7 +186,21 @@ sudo journalctl -u raspi-status-leds.service -f
 ## Configuracion KNX
 
 Nota para la Weinzierl KNX BAOS 838 kBerry: esta pasarela usa UART serie, no KNX/IP.
-El script actual solo implementa `off`, `host` y `multicast` para KNX/IP. Para la kBerry prepararemos un modo serie/BAOS; hasta entonces deja `knx_check_mode` en `off` si no hay interfaz KNX/IP en red.
+El modo recomendado para este maletin es:
+
+```json
+"knx_check_mode": "serial",
+"knx_serial_device": "/dev/serial0",
+"knx_serial_baudrate": 19200
+```
+
+El script pregunta al modulo por BAOS/FT1.2 y enciende el LED KNX si el estado de conexion al bus KNX esta activo.
+
+La consola serie de Raspberry debe estar desactivada en esos pines. La configuracion correcta es:
+
+- Interfaz serie hardware: activada.
+- Login/consola por serie: desactivado.
+- Sin `console=serial0,115200` ni `console=ttyS0,115200` en `/boot/firmware/cmdline.txt`.
 
 Edita `config.json`.
 

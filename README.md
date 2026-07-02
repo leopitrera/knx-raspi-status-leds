@@ -92,10 +92,19 @@ sudo systemctl restart raspi-status-leds.service
 La Weinzierl KNX BAOS Module 838 kBerry se pincha en el conector GPIO y usa comunicacion serie UART.
 Segun la ficha tecnica, su interfaz host usa los pines fisicos 1, 6, 8 y 10. Por eso los LED se han movido a los pines fisicos 29, 31, 33 y 37, que quedan fuera de la zona del conector de 26 pines.
 
-El modo KNX actual del script es para KNX/IP:
+El LED KNX puede comprobar varias interfaces:
 
 - `off`: no comprueba KNX.
 - `host`: pregunta por UDP a una interfaz KNX/IP concreta.
 - `multicast`: busca interfaces KNX/IP en la red usando multicast.
+- `serial`: pregunta a la Weinzierl kBerry por UART/BAOS y enciende el LED si el item BAOS de estado de bus indica conexion.
 
-Para la kBerry prepararemos una comprobacion serie/BAOS separada. Mientras tanto deja `knx_check_mode` en `off` si la Raspberry solo tiene la kBerry y no una interfaz KNX/IP en red.
+Para la kBerry en Raspberry Pi:
+
+```json
+"knx_check_mode": "serial",
+"knx_serial_device": "/dev/serial0",
+"knx_serial_baudrate": 19200
+```
+
+La consola/login serie de Raspberry debe estar desactivada para que la kBerry tenga libre el UART de los pines 8 y 10.

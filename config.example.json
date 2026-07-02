@@ -25,5 +25,8 @@
   "knx_check_mode": "off",
   "knx_host": "",
   "knx_port": 3671,
-  "knx_timeout_seconds": 2
+  "knx_timeout_seconds": 2,
+  "knx_serial_device": "/dev/serial0",
+  "knx_serial_baudrate": 19200,
+  "knx_serial_timeout_seconds": 2
 }

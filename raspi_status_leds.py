@@ -47,6 +47,9 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "knx_host": "",
     "knx_port": 3671,
     "knx_timeout_seconds": 2,
+    "knx_serial_device": "/dev/serial0",
+    "knx_serial_baudrate": 19200,
+    "knx_serial_timeout_seconds": 2,
 }
 
 
@@ -216,6 +219,142 @@ def knx_multicast_search(port: int, timeout_seconds: float) -> bool:
         return False
 
 
+def termios_baud_constant(termios_module: Any, baudrate: int) -> int:
+    baud_name = f"B{baudrate}"
+    if not hasattr(termios_module, baud_name):
+        raise ValueError(f"unsupported serial baudrate: {baudrate}")
+    return int(getattr(termios_module, baud_name))
+
+
+def read_ft12_serial_frame(fd: int, timeout_seconds: float) -> bytes:
+    import select
+
+    deadline = time.monotonic() + timeout_seconds
+    buffer = bytearray()
+    while time.monotonic() < deadline:
+        remaining = max(0.0, deadline - time.monotonic())
+        readable, _, _ = select.select([fd], [], [], remaining)
+        if not readable:
+            break
+        try:
+            chunk = os.read(fd, 256)
+        except BlockingIOError:
+            continue
+        if not chunk:
+            continue
+        buffer.extend(chunk)
+
+        while buffer and buffer[0] == 0xE5:
+            del buffer[0]
+
+        if len(buffer) >= 4 and buffer[0] == 0x10:
+            fixed = bytes(buffer[:4])
+            del buffer[:4]
+            if fixed[3] == 0x16 and fixed[1] == fixed[2]:
+                os.write(fd, b"\xE5")
+            continue
+
+        while buffer and buffer[0] != 0x68:
+            del buffer[0]
+        if len(buffer) < 6:
+            continue
+
+        length = buffer[1]
+        total_length = length + 6
+        if buffer[2] != length or buffer[3] != 0x68:
+            del buffer[0]
+            continue
+        if len(buffer) < total_length:
+            continue
+
+        frame = bytes(buffer[:total_length])
+        del buffer[:total_length]
+        checksum = sum(frame[4 : 4 + length]) & 0xFF
+        if frame[-1] != 0x16 or checksum != frame[-2]:
+            continue
+        os.write(fd, b"\xE5")
+        return frame
+    return b""
+
+
+def parse_baos_bus_connection_state(data: bytes) -> bool | None:
+    if len(data) < 6 or data[0] != 0xF0 or data[1] != 0x81:
+        return None
+    index = 6
+    while index + 3 <= len(data):
+        item_id = int.from_bytes(data[index : index + 2], "big")
+        item_length = data[index + 2]
+        value_start = index + 3
+        value_end = value_start + item_length
+        if value_end > len(data):
+            return None
+        if item_id == 10 and item_length >= 1:
+            return data[value_start] == 1
+        index = value_end
+    return None
+
+
+def knx_serial_baos_bus_connected(device: str, baudrate: int, timeout_seconds: float) -> bool:
+    try:
+        import termios
+    except ImportError:
+        return False
+
+    if not device or not Path(device).exists():
+        return False
+
+    fd = -1
+    original_attrs: list[Any] | None = None
+    try:
+        fd = os.open(device, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK)
+        original_attrs = termios.tcgetattr(fd)
+        attrs = termios.tcgetattr(fd)
+        baud = termios_baud_constant(termios, baudrate)
+        attrs[0] = termios.IGNPAR
+        attrs[1] = 0
+        attrs[2] &= ~(termios.CSIZE | termios.PARENB | termios.PARODD | termios.CSTOPB)
+        attrs[2] &= ~getattr(termios, "CRTSCTS", 0)
+        attrs[2] |= termios.CS8 | termios.CLOCAL | termios.CREAD | termios.PARENB
+        attrs[3] = 0
+        attrs[6][termios.VMIN] = 0
+        attrs[6][termios.VTIME] = 0
+        attrs[4] = baud
+        attrs[5] = baud
+        termios.tcsetattr(fd, termios.TCSANOW, attrs)
+        termios.tcflush(fd, termios.TCIOFLUSH)
+
+        os.write(fd, bytes([0x10, 0x40, 0x40, 0x16]))
+        time.sleep(0.05)
+        payload = bytes([0xF0, 0x01, 0x00, 0x0A, 0x00, 0x01])
+        control = 0x73
+        length = len(payload) + 1
+        checksum = (control + sum(payload)) & 0xFF
+        request = bytes([0x68, length, length, 0x68, control]) + payload + bytes([checksum, 0x16])
+        os.write(fd, request)
+
+        deadline = time.monotonic() + timeout_seconds
+        while time.monotonic() < deadline:
+            frame = read_ft12_serial_frame(fd, max(0.0, deadline - time.monotonic()))
+            if not frame:
+                break
+            data = frame[5:-2]
+            state = parse_baos_bus_connection_state(data)
+            if state is not None:
+                return state
+        return False
+    except (OSError, ValueError, termios.error) as exc:
+        logging.debug("KNX serial BAOS check failed: %s", exc)
+        return False
+    finally:
+        if fd >= 0:
+            if original_attrs is not None:
+                try:
+                    termios.tcsetattr(fd, termios.TCSANOW, original_attrs)
+                except Exception:
+                    pass
+            os.close(fd)
+
+
 def knx_ok(config: dict[str, Any]) -> bool:
     mode = str(config.get("knx_check_mode", "off")).lower()
     host = str(config.get("knx_host", ""))
@@ -227,6 +366,12 @@ def knx_ok(config: dict[str, Any]) -> bool:
         return knx_description_request(host, port, timeout)
     if mode == "multicast":
         return knx_multicast_search(port, timeout)
+    if mode in {"serial", "kberry", "baos"}:
+        return knx_serial_baos_bus_connected(
+            str(config.get("knx_serial_device", "/dev/serial0")),
+            int(config.get("knx_serial_baudrate", 19200)),
+            float(config.get("knx_serial_timeout_seconds", timeout)),
+        )
     return False
 
 
