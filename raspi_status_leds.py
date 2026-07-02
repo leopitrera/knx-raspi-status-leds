@@ -30,7 +30,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "check_interval_seconds": 5,
     "blink_interval_seconds": 0.5,
     "local_probe_host": "",
-    "internet_probe_host": "1.1.1.1",
+    "internet_probe_host": "8.8.8.8",
     "internet_probe_port": 53,
     "internet_timeout_seconds": 1.5,
     "dns_probe_name": "raspberrypi.com",
