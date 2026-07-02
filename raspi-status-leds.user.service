@@ -1,0 +1,14 @@
+[Unit]
+Description=KNX Raspberry status LEDs
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/knx-raspi-status-leds
+ExecStart=/usr/bin/python3 %h/knx-raspi-status-leds/raspi_status_leds.py --config %h/knx-raspi-status-leds/config.json
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

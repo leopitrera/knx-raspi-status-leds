@@ -21,10 +21,10 @@ from typing import Any
 
 DEFAULT_CONFIG: dict[str, Any] = {
     "pins": {
-        "raspberry": 17,
-        "network": 27,
-        "raspberry_connect": 22,
-        "knx": 23,
+        "raspberry": 5,
+        "network": 6,
+        "raspberry_connect": 13,
+        "knx": 26,
     },
     "active_high": True,
     "check_interval_seconds": 5,

@@ -56,6 +56,15 @@ sudo ./install.sh
 
 Edita `config.json` para ajustar el modo de comprobacion KNX si quieres activar el LED KNX.
 
+Si no quieres usar `sudo`, puedes instalarlo como servicio de usuario:
+
+```bash
+git clone https://github.com/leopitrera/knx-raspi-status-leds.git
+cd knx-raspi-status-leds
+chmod +x install-user.sh
+./install-user.sh
+```
+
 ## Prueba Sin GPIO
 
 ```bash
