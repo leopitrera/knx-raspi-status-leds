@@ -4,24 +4,25 @@ Indicadores LED para maletines KNX con Raspberry Pi.
 
 ## Indicadores
 
-El proyecto usa cuatro GPIO de la Raspberry para alimentar directamente cuatro LED de 3,3 V:
+El proyecto usa cuatro GPIO de la Raspberry para alimentar directamente cuatro LED de 3,3 V.
+La asignacion recomendada evita los primeros 26 pines porque ahi se monta la Weinzierl KNX BAOS Module 838 kBerry.
 
 | LED | GPIO BCM | Estado |
 | --- | ---: | --- |
-| Raspberry | 17 | Fijo si el servicio esta vivo |
-| Red / Internet | 27 | Apagado sin red, parpadeo con red local, fijo con internet |
-| Raspberry Connect | 22 | Fijo si Raspberry Connect parece disponible |
-| KNX | 23 | Fijo si la interfaz KNX/IP responde |
+| Raspberry | 5 | Fijo si el servicio esta vivo |
+| Red / Internet | 6 | Apagado sin red, parpadeo con red local, fijo con internet |
+| Raspberry Connect | 13 | Fijo si Raspberry Connect parece disponible |
+| KNX | 26 | Fijo si la comprobacion KNX responde |
 
 Pines fisicos en el conector de 40 pines:
 
 | LED | GPIO BCM | Pin fisico |
 | --- | ---: | ---: |
-| Raspberry | GPIO17 | 11 |
-| Red / Internet | GPIO27 | 13 |
-| Raspberry Connect | GPIO22 | 15 |
-| KNX | GPIO23 | 16 |
-| GND comun | GND | 6, 9, 14, 20, 25, 30, 34 o 39 |
+| Raspberry | GPIO5 | 29 |
+| Red / Internet | GPIO6 | 31 |
+| Raspberry Connect | GPIO13 | 33 |
+| KNX | GPIO26 | 37 |
+| GND comun | GND | 39 recomendado; 30 o 34 tambien disponibles |
 
 ## Cableado
 
@@ -53,7 +54,7 @@ chmod +x install.sh
 sudo ./install.sh
 ```
 
-Edita `config.json` para ajustar la IP de la interfaz KNX/IP si quieres activar el LED KNX.
+Edita `config.json` para ajustar el modo de comprobacion KNX si quieres activar el LED KNX.
 
 ## Prueba Sin GPIO
 
@@ -77,12 +78,15 @@ Reiniciar:
 sudo systemctl restart raspi-status-leds.service
 ```
 
-## KNX
+## Weinzierl kBerry Y KNX
 
-El LED KNX puede funcionar de dos maneras:
+La Weinzierl KNX BAOS Module 838 kBerry se pincha en el conector GPIO y usa comunicacion serie UART.
+Segun la ficha tecnica, su interfaz host usa los pines fisicos 1, 6, 8 y 10. Por eso los LED se han movido a los pines fisicos 29, 31, 33 y 37, que quedan fuera de la zona del conector de 26 pines.
+
+El modo KNX actual del script es para KNX/IP:
 
 - `off`: no comprueba KNX.
 - `host`: pregunta por UDP a una interfaz KNX/IP concreta.
 - `multicast`: busca interfaces KNX/IP en la red usando multicast.
 
-Para empezar, lo mas practico es usar `host` y configurar `knx_host`.
+Para la kBerry prepararemos una comprobacion serie/BAOS separada. Mientras tanto deja `knx_check_mode` en `off` si la Raspberry solo tiene la kBerry y no una interfaz KNX/IP en red.

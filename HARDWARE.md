@@ -8,11 +8,26 @@ Usaremos cuatro GPIO como salidas digitales a 3,3 V:
 
 | Funcion | GPIO BCM | Pin fisico | Estado esperado |
 | --- | ---: | ---: | --- |
-| Raspberry encendida | GPIO17 | 11 | Fijo si el servicio esta vivo |
-| Red / Internet | GPIO27 | 13 | Apagado sin red, parpadeo con red local, fijo con internet |
-| Raspberry Connect | GPIO22 | 15 | Fijo si Connect esta disponible |
-| Bus KNX | GPIO23 | 16 | Fijo si hay comunicacion KNX |
-| Comun | GND | 6, 9, 14, 20, 25, 30, 34 o 39 | Retorno comun |
+| Raspberry encendida | GPIO5 | 29 | Fijo si el servicio esta vivo |
+| Red / Internet | GPIO6 | 31 | Apagado sin red, parpadeo con red local, fijo con internet |
+| Raspberry Connect | GPIO13 | 33 | Fijo si Connect esta disponible |
+| Bus KNX | GPIO26 | 37 | Fijo si hay comunicacion KNX |
+| Comun | GND | 39 recomendado; 30 o 34 tambien disponibles | Retorno comun |
+
+## Compatibilidad Con Weinzierl KNX BAOS 838 kBerry
+
+La kBerry se monta sobre el conector GPIO de la Raspberry y usa un conector host de 26 pines.
+Segun la ficha tecnica oficial, la interfaz host usa:
+
+| Pin fisico Raspberry | Uso kBerry |
+| ---: | --- |
+| 1 | VCC 3,3 V |
+| 6 | GND |
+| 8 | RX hacia la 838 |
+| 10 | TX desde la 838 |
+
+Electicamente, los GPIO antiguos que habiamos elegido no aparecen como usados por la kBerry, pero fisicamente quedan en la zona cubierta por su conector de 26 pines.
+Por eso esta guia usa pines fisicos 29, 31, 33 y 37 para los LED, mas GND en 39. Asi quedan en la parte libre del conector de 40 pines.
 
 ## Regla Importante
 
@@ -59,16 +74,16 @@ GND  --------------------- catodo LED
 Equivalente por funcion:
 
 ```text
-Pin 11 / GPIO17 ---- 470R ---- anodo LED Raspberry
+Pin 29 / GPIO5  ---- 470R ---- anodo LED Raspberry
 GND -------------------------- catodo LED Raspberry
 
-Pin 13 / GPIO27 ---- 470R ---- anodo LED Red/Internet
+Pin 31 / GPIO6  ---- 470R ---- anodo LED Red/Internet
 GND -------------------------- catodo LED Red/Internet
 
-Pin 15 / GPIO22 ---- 470R ---- anodo LED Raspberry Connect
+Pin 33 / GPIO13 ---- 470R ---- anodo LED Raspberry Connect
 GND -------------------------- catodo LED Raspberry Connect
 
-Pin 16 / GPIO23 ---- 470R ---- anodo LED KNX
+Pin 37 / GPIO26 ---- 470R ---- anodo LED KNX
 GND -------------------------- catodo LED KNX
 ```
 
@@ -116,7 +131,7 @@ Diseno recomendado:
 
 ## Prueba Manual Antes Del Script
 
-Conecta primero un solo LED, por ejemplo el de Raspberry en GPIO17.
+Conecta primero un solo LED, por ejemplo el de Raspberry en GPIO5.
 
 Instala `gpiozero`:
 
@@ -132,7 +147,7 @@ python3 - <<'PY'
 from gpiozero import LED
 from time import sleep
 
-led = LED(17)
+led = LED(5)
 led.on()
 sleep(3)
 led.off()
@@ -141,7 +156,7 @@ PY
 
 Si no enciende:
 
-1. Revisa que usas el pin fisico 11 para GPIO17.
+1. Revisa que usas el pin fisico 29 para GPIO5.
 2. Revisa que el catodo va a GND.
 3. Revisa la resistencia en serie.
 4. Prueba girar el LED si es un LED suelto.
@@ -169,6 +184,9 @@ sudo journalctl -u raspi-status-leds.service -f
 ```
 
 ## Configuracion KNX
+
+Nota para la Weinzierl KNX BAOS 838 kBerry: esta pasarela usa UART serie, no KNX/IP.
+El script actual solo implementa `off`, `host` y `multicast` para KNX/IP. Para la kBerry prepararemos un modo serie/BAOS; hasta entonces deja `knx_check_mode` en `off` si no hay interfaz KNX/IP en red.
 
 Edita `config.json`.
 
