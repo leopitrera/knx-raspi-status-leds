@@ -108,3 +108,11 @@ Para la kBerry en Raspberry Pi:
 ```
 
 La consola/login serie de Raspberry debe estar desactivada para que la kBerry tenga libre el UART de los pines 8 y 10.
+En Raspberry Pi 4, es recomendable usar el UART PL011 en esos pines. En MLT001 se ha dejado asi con:
+
+```text
+enable_uart=1
+dtoverlay=disable-bt
+```
+
+Tras reiniciar, `readlink -f /dev/serial0` debe devolver `/dev/ttyAMA0`.

@@ -201,6 +201,16 @@ La consola serie de Raspberry debe estar desactivada en esos pines. La configura
 - Interfaz serie hardware: activada.
 - Login/consola por serie: desactivado.
 - Sin `console=serial0,115200` ni `console=ttyS0,115200` en `/boot/firmware/cmdline.txt`.
+- UART estable PL011 recomendado: `readlink -f /dev/serial0` debe devolver `/dev/ttyAMA0`.
+
+En Raspberry Pi 4, si `/dev/serial0` apunta a `/dev/ttyS0`, la kBerry puede no responder aunque el bus KNX este conectado. En MLT001 se ha corregido anadiendo a `/boot/firmware/config.txt`:
+
+```text
+enable_uart=1
+dtoverlay=disable-bt
+```
+
+Despues hay que reiniciar la Raspberry.
 
 Edita `config.json`.
 
