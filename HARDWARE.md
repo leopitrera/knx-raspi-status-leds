@@ -1,15 +1,16 @@
 # Guia De Conexion De LEDs
 
-Esta guia describe como conectar cuatro LED/pilotos directamente a los GPIO de una Raspberry Pi, sin alimentacion externa para los LED.
+Esta guia describe como conectar cinco LED/pilotos directamente a los GPIO de una Raspberry Pi, sin alimentacion externa para los LED.
 
 ## Resumen
 
-Usaremos cuatro GPIO como salidas digitales a 3,3 V:
+Usaremos cinco GPIO como salidas digitales a 3,3 V:
 
 | Funcion | GPIO BCM | Pin fisico | Estado esperado |
 | --- | ---: | ---: | --- |
 | Raspberry encendida | GPIO5 | 29 | Fijo si el servicio esta vivo |
-| Red / Internet | GPIO6 | 31 | Apagado sin red, parpadeo con red local, fijo con internet |
+| Red local | GPIO6 | 31 | Fijo si hay red local |
+| Internet | GPIO16 | 36 | Fijo si hay salida a internet y DNS |
 | Raspberry Connect | GPIO13 | 33 | Fijo si Connect esta disponible |
 | Bus KNX | GPIO26 | 37 | Fijo si hay comunicacion KNX |
 | Comun | GND | 39 recomendado; 30 o 34 tambien disponibles | Retorno comun |
@@ -27,7 +28,7 @@ Segun la ficha tecnica oficial, la interfaz host usa:
 | 10 | TX desde la 838 |
 
 Electicamente, los GPIO antiguos que habiamos elegido no aparecen como usados por la kBerry, pero fisicamente quedan en la zona cubierta por su conector de 26 pines.
-Por eso esta guia usa pines fisicos 29, 31, 33 y 37 para los LED, mas GND en 39. Asi quedan en la parte libre del conector de 40 pines.
+Por eso esta guia usa pines fisicos 29, 31, 33, 36 y 37 para los LED, mas GND en 39. Asi quedan en la parte libre del conector de 40 pines.
 
 ## Regla Importante
 
@@ -41,14 +42,14 @@ Este proyecto alimenta los LED desde GPIO, por tanto:
 
 ## Material Por Cada Maletin
 
-Para cuatro indicadores:
+Para cinco indicadores:
 
 | Cantidad | Material |
 | ---: | --- |
-| 4 | LED o piloto LED compatible con 3,3 V |
-| 4 | Resistencias de 470 ohm, 1/4 W |
+| 5 | LED o piloto LED compatible con 3,3 V |
+| 5 | Resistencias de 470 ohm, 1/4 W |
 | 1 | Cable GND comun |
-| 4 | Cables desde GPIO a LED |
+| 5 | Cables desde GPIO a LED |
 | Opcional | Regleta, clema o conector desmontable para el frontal |
 
 Recomendacion inicial: `470 ohm`.
@@ -77,8 +78,11 @@ Equivalente por funcion:
 Pin 29 / GPIO5  ---- 470R ---- anodo LED Raspberry
 GND -------------------------- catodo LED Raspberry
 
-Pin 31 / GPIO6  ---- 470R ---- anodo LED Red/Internet
-GND -------------------------- catodo LED Red/Internet
+Pin 31 / GPIO6  ---- 470R ---- anodo LED Red local
+GND -------------------------- catodo LED Red local
+
+Pin 36 / GPIO16 ---- 470R ---- anodo LED Internet
+GND -------------------------- catodo LED Internet
 
 Pin 33 / GPIO13 ---- 470R ---- anodo LED Raspberry Connect
 GND -------------------------- catodo LED Raspberry Connect
@@ -253,6 +257,7 @@ python3 raspi_status_leds.py --config config.json
 | LED | Apagado | Parpadeo | Fijo |
 | --- | --- | --- | --- |
 | Raspberry | Servicio parado o Raspberry apagada | No usado | Servicio vivo |
-| Red / Internet | Sin red local | Red local sin internet | Internet OK |
+| Red local | Sin red local | No usado | Red local OK |
+| Internet | Sin internet util | No usado | Internet y DNS OK |
 | Raspberry Connect | Connect no disponible | No usado | Connect OK |
 | KNX | KNX no disponible | No usado | KNX OK |

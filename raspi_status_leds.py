@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Drive four Raspberry Pi GPIO LEDs with network, Connect, and KNX status."""
+"""Drive Raspberry Pi GPIO LEDs with network, Connect, and KNX status."""
 
 from __future__ import annotations
 
@@ -22,7 +22,8 @@ from typing import Any
 DEFAULT_CONFIG: dict[str, Any] = {
     "pins": {
         "raspberry": 5,
-        "network": 6,
+        "local_network": 6,
+        "internet": 16,
         "raspberry_connect": 13,
         "knx": 26,
     },
@@ -413,12 +414,21 @@ def create_leds(config: dict[str, Any], dry_run: bool) -> dict[str, Any]:
 
 def apply_leds(leds: dict[str, Any], status: Status, network_blink: bool) -> None:
     leds["raspberry"].set(status.raspberry)
-    if status.internet and status.dns:
-        leds["network"].set(True)
-    elif status.local_network:
-        leds["network"].set(network_blink)
-    else:
-        leds["network"].set(False)
+
+    internet_usable = status.internet and status.dns
+    if "local_network" in leds:
+        leds["local_network"].set(status.local_network)
+    if "internet" in leds:
+        leds["internet"].set(internet_usable)
+
+    if "network" in leds:
+        if internet_usable:
+            leds["network"].set(True)
+        elif status.local_network:
+            leds["network"].set(network_blink)
+        else:
+            leds["network"].set(False)
+
     leds["raspberry_connect"].set(status.raspberry_connect)
     leds["knx"].set(status.knx)
 

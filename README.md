@@ -4,13 +4,14 @@ Indicadores LED para maletines KNX con Raspberry Pi.
 
 ## Indicadores
 
-El proyecto usa cuatro GPIO de la Raspberry para alimentar directamente cuatro LED de 3,3 V.
+El proyecto usa cinco GPIO de la Raspberry para alimentar directamente cinco LED de 3,3 V.
 La asignacion recomendada evita los primeros 26 pines porque ahi se monta la Weinzierl KNX BAOS Module 838 kBerry.
 
 | LED | GPIO BCM | Estado |
 | --- | ---: | --- |
 | Raspberry | 5 | Fijo si el servicio esta vivo |
-| Red / Internet | 6 | Apagado sin red, parpadeo con red local, fijo con internet |
+| Red local | 6 | Fijo si hay red local |
+| Internet | 16 | Fijo si hay salida a internet y DNS |
 | Raspberry Connect | 13 | Fijo si Raspberry Connect parece disponible |
 | KNX | 26 | Fijo si la comprobacion KNX responde |
 
@@ -19,7 +20,8 @@ Pines fisicos en el conector de 40 pines:
 | LED | GPIO BCM | Pin fisico |
 | --- | ---: | ---: |
 | Raspberry | GPIO5 | 29 |
-| Red / Internet | GPIO6 | 31 |
+| Red local | GPIO6 | 31 |
+| Internet | GPIO16 | 36 |
 | Raspberry Connect | GPIO13 | 33 |
 | KNX | GPIO26 | 37 |
 | GND comun | GND | 39 recomendado; 30 o 34 tambien disponibles |
@@ -55,6 +57,7 @@ sudo ./install.sh
 ```
 
 Edita `config.json` para ajustar el modo de comprobacion KNX si quieres activar el LED KNX.
+La comprobacion DNS no tiene LED propio: se usa internamente para que el LED de Internet solo se encienda cuando internet es util por nombre de dominio.
 
 Si no quieres usar `sudo`, puedes instalarlo como servicio de usuario:
 
