@@ -252,6 +252,12 @@ Ejecutar con GPIO, sin instalar servicio:
 python3 raspi_status_leds.py --config config.json
 ```
 
+Si Raspberry Connect se comprueba desde un servicio del sistema que corre como `root`, anade el usuario de la sesion Connect:
+
+```json
+"raspberry_connect_user": "sp4c10"
+```
+
 ## Tabla Final De Estados
 
 | LED | Apagado | Parpadeo | Fijo |

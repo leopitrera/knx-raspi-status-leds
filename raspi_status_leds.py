@@ -36,6 +36,8 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "internet_timeout_seconds": 1.5,
     "dns_probe_name": "raspberrypi.com",
     "raspberry_connect_command": ["rpi-connect", "status"],
+    "raspberry_connect_user": "",
+    "raspberry_connect_runtime_dir": "",
     "raspberry_connect_timeout_seconds": 3,
     "raspberry_connect_forbidden_words": [
         "not signed in",
@@ -130,13 +132,14 @@ def read_default_gateway() -> str:
     return ""
 
 
-def command_ok(command: list[str], timeout: float) -> tuple[bool, str]:
+def command_ok(command: list[str], timeout: float, env: dict[str, str] | None = None) -> tuple[bool, str]:
     if not command or shutil.which(command[0]) is None:
         return False, f"command not found: {command[0] if command else ''}"
     try:
         result = subprocess.run(
             command,
             capture_output=True,
+            env=env,
             text=True,
             timeout=timeout,
             check=False,
@@ -180,7 +183,34 @@ def dns_ok(name: str, timeout_seconds: float) -> bool:
 def raspberry_connect_ok(config: dict[str, Any]) -> bool:
     command = list(config["raspberry_connect_command"])
     timeout = float(config["raspberry_connect_timeout_seconds"])
-    ok, output = command_ok(command, timeout)
+    env = None
+
+    connect_user = str(config.get("raspberry_connect_user", "")).strip()
+    if connect_user:
+        try:
+            import pwd
+
+            user_info = pwd.getpwnam(connect_user)
+            runtime_dir = str(config.get("raspberry_connect_runtime_dir") or f"/run/user/{user_info.pw_uid}")
+            user_env = {
+                "XDG_RUNTIME_DIR": runtime_dir,
+                "DBUS_SESSION_BUS_ADDRESS": f"unix:path={runtime_dir}/bus",
+                "HOME": user_info.pw_dir,
+                "USER": connect_user,
+                "LOGNAME": connect_user,
+            }
+            if hasattr(os, "geteuid") and os.geteuid() != user_info.pw_uid:
+                command = ["sudo", "-n", "-u", connect_user, "env"] + [
+                    f"{key}={value}" for key, value in user_env.items()
+                ] + command
+            else:
+                env = os.environ.copy()
+                env.update(user_env)
+        except (ImportError, KeyError, OSError) as exc:
+            logging.debug("No se pudo preparar usuario Raspberry Connect %s: %s", connect_user, exc)
+            return False
+
+    ok, output = command_ok(command, timeout, env=env)
     if not ok:
         return False
     lowered = output.lower()

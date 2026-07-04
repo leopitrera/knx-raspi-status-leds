@@ -59,6 +59,12 @@ sudo ./install.sh
 Edita `config.json` para ajustar el modo de comprobacion KNX si quieres activar el LED KNX.
 La comprobacion DNS no tiene LED propio: se usa internamente para que el LED de Internet solo se encienda cuando internet es util por nombre de dominio.
 
+Si instalas el servicio del sistema como `root` y Raspberry Connect esta iniciado en un usuario concreto, configura:
+
+```json
+"raspberry_connect_user": "sp4c10"
+```
+
 Si no quieres usar `sudo`, puedes instalarlo como servicio de usuario:
 
 ```bash
