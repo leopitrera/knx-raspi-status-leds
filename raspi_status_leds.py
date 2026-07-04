@@ -132,7 +132,12 @@ def read_default_gateway() -> str:
     return ""
 
 
-def command_ok(command: list[str], timeout: float, env: dict[str, str] | None = None) -> tuple[bool, str]:
+def command_ok(
+    command: list[str],
+    timeout: float,
+    env: dict[str, str] | None = None,
+    preexec_fn: Any | None = None,
+) -> tuple[bool, str]:
     if not command or shutil.which(command[0]) is None:
         return False, f"command not found: {command[0] if command else ''}"
     try:
@@ -140,6 +145,7 @@ def command_ok(command: list[str], timeout: float, env: dict[str, str] | None = 
             command,
             capture_output=True,
             env=env,
+            preexec_fn=preexec_fn,
             text=True,
             timeout=timeout,
             check=False,
@@ -184,6 +190,7 @@ def raspberry_connect_ok(config: dict[str, Any]) -> bool:
     command = list(config["raspberry_connect_command"])
     timeout = float(config["raspberry_connect_timeout_seconds"])
     env = None
+    preexec_fn = None
 
     connect_user = str(config.get("raspberry_connect_user", "")).strip()
     if connect_user:
@@ -199,18 +206,24 @@ def raspberry_connect_ok(config: dict[str, Any]) -> bool:
                 "USER": connect_user,
                 "LOGNAME": connect_user,
             }
-            if hasattr(os, "geteuid") and os.geteuid() != user_info.pw_uid:
+            env = os.environ.copy()
+            env.update(user_env)
+            if hasattr(os, "geteuid") and os.geteuid() == 0:
+                def demote_to_connect_user() -> None:
+                    os.initgroups(connect_user, user_info.pw_gid)
+                    os.setgid(user_info.pw_gid)
+                    os.setuid(user_info.pw_uid)
+
+                preexec_fn = demote_to_connect_user
+            elif hasattr(os, "geteuid") and os.geteuid() != user_info.pw_uid:
                 command = ["sudo", "-n", "-u", connect_user, "env"] + [
                     f"{key}={value}" for key, value in user_env.items()
                 ] + command
-            else:
-                env = os.environ.copy()
-                env.update(user_env)
         except (ImportError, KeyError, OSError) as exc:
             logging.debug("No se pudo preparar usuario Raspberry Connect %s: %s", connect_user, exc)
             return False
 
-    ok, output = command_ok(command, timeout, env=env)
+    ok, output = command_ok(command, timeout, env=env, preexec_fn=preexec_fn)
     if not ok:
         return False
     lowered = output.lower()
