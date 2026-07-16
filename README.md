@@ -11,9 +11,11 @@ La asignacion recomendada evita los primeros 26 pines porque ahi se monta la Wei
 | --- | ---: | --- |
 | Raspberry | 5 | Fijo si el servicio esta vivo |
 | Red local | 6 | Fijo si hay red local |
-| Internet | 16 | Fijo si hay salida a internet y DNS |
-| Raspberry Connect | 13 | Fijo si Raspberry Connect parece disponible |
-| KNX | 26 | Fijo si la comprobacion KNX responde |
+| Internet | 16 | Fijo si hay salida a internet y DNS; parpadea si no |
+| Raspberry Connect | 13 | Fijo si Raspberry Connect parece disponible; parpadea si no |
+| KNX | 26 | Fijo si la comprobacion KNX responde; parpadea si no |
+
+Los LED de Internet, Raspberry Connect y KNX parpadean cuando su comprobacion falla, en lugar de apagarse, para distinguir "sin servicio" de "LED sin alimentar". La cadencia se ajusta con `blink_interval_seconds` en la configuracion.
 
 Pines fisicos en el conector de 40 pines:
 

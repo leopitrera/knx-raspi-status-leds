@@ -455,25 +455,28 @@ def create_leds(config: dict[str, Any], dry_run: bool) -> dict[str, Any]:
     return leds
 
 
-def apply_leds(leds: dict[str, Any], status: Status, network_blink: bool) -> None:
+def apply_leds(leds: dict[str, Any], status: Status, blink: bool) -> None:
     leds["raspberry"].set(status.raspberry)
 
     internet_usable = status.internet and status.dns
     if "local_network" in leds:
         leds["local_network"].set(status.local_network)
     if "internet" in leds:
-        leds["internet"].set(internet_usable)
+        # Fijo si hay internet + DNS; parpadea si no.
+        leds["internet"].set(True if internet_usable else blink)
 
     if "network" in leds:
         if internet_usable:
             leds["network"].set(True)
         elif status.local_network:
-            leds["network"].set(network_blink)
+            leds["network"].set(blink)
         else:
             leds["network"].set(False)
 
-    leds["raspberry_connect"].set(status.raspberry_connect)
-    leds["knx"].set(status.knx)
+    # Fijo si Raspberry Connect esta disponible; parpadea si no.
+    leds["raspberry_connect"].set(True if status.raspberry_connect else blink)
+    # Fijo si el bus KNX responde; parpadea si no.
+    leds["knx"].set(True if status.knx else blink)
 
 
 def close_leds(leds: dict[str, Any]) -> None:
