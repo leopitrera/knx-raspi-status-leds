@@ -64,7 +64,7 @@ La comprobacion DNS no tiene LED propio: se usa internamente para que el LED de 
 Si instalas el servicio del sistema como `root` y Raspberry Connect esta iniciado en un usuario concreto, configura:
 
 ```json
-"raspberry_connect_user": "sp4c10"
+"raspberry_connect_user": "tu-usuario"
 ```
 
 Si no quieres usar `sudo`, puedes instalarlo como servicio de usuario:

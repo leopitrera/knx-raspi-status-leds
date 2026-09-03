@@ -255,7 +255,7 @@ python3 raspi_status_leds.py --config config.json
 Si Raspberry Connect se comprueba desde un servicio del sistema que corre como `root`, anade el usuario de la sesion Connect:
 
 ```json
-"raspberry_connect_user": "sp4c10"
+"raspberry_connect_user": "tu-usuario"
 ```
 
 ## Tabla Final De Estados
